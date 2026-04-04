@@ -1,70 +1,32 @@
-import React from 'react';
-import Templeate from './Templeate';
-import Skel from './Skel';
+import React from "react";
+import Templeate from "./Templeate";
+import Skel from "./Skel";
+
 const Injuries = ({ profile }) => {
+  if (!profile) {
+    return <Skel />;
+  }
 
-    function handleRow() {
-        let temp = []
+  const columns = [
+    { key: "Season", label: "Season" },
+    { key: "Injury", label: "Injury" },
+    { key: "From", label: "From" },
+    { key: "Until", label: "Until" },
+    { key: "Days", label: "Days" },
+    { key: "Games missed", label: "Games missed" },
+  ];
 
-        let i = 1
+  const rows = (profile.body || []).map((item, index) => ({
+    key: index + 1,
+    Season: item[0],
+    Injury: item[1],
+    From: item[2],
+    Until: item[3],
+    Days: item[4],
+    "Games missed": item[5],
+  }));
 
-        profile.body.forEach(function (item) {
-            temp.push({
-                key: i,
-                Season: item[0],
-                Injury: item[1],
-                From: item[2],
-                Until: item[3],
-                Days: item[4],
-                "Games missed": item[5]
-            });
-            i++;
-        });
-        return temp;
-    }
+  return <Templeate columns={columns} rows={rows} emptyMessage="No injury history available." />;
+};
 
-
-    function handleCol() {
-        if (!profile) return []; // Handle case where profile is not yet fetched
-        let temp = [
-            {
-                key: "Season",
-                label: "Season"
-            },
-            {
-                key: "Injury",
-                label: "Injury"
-            },
-            {
-                key: "From",
-                label: "From"
-            },
-            {
-                key: "Until",
-                label: "Until"
-            },
-            {
-                key: "Days",
-                label: "Days"
-            },
-            {
-                key: "Games missed",
-                label: "Games missed"
-            }
-        ];
-
-        return temp;
-    }
-
-    return (
-        <div>
-            {profile &&
-                <Templeate columns={handleCol()} rows={handleRow()} profile={profile} />
-            }
-
-            {!profile && <Skel />
-            }
-        </div>
-    );
-}
 export default Injuries;

@@ -1,66 +1,32 @@
-import React from 'react';
-import Templeate from './Templeate';
-import Skel from './Skel';
+import React from "react";
+import Templeate from "./Templeate";
+import Skel from "./Skel";
 
 const Transfers = ({ profile }) => {
+  if (!profile) {
+    return <Skel />;
+  }
 
-    function handleRow() {
-        let temp = []
+  const columns = [
+    { key: "Season", label: "Season" },
+    { key: "Date", label: "Date" },
+    { key: "From", label: "From" },
+    { key: "To", label: "To" },
+    { key: "Market Value", label: "Market Value" },
+    { key: "Fee", label: "Fee" },
+  ];
 
-        let i = 1
-        profile.body.forEach(function (item) {
-            temp.push({
-                key: i,
-                Date: item[0],
-                "From": item[1],
-                "To": item[2],
-                "Market Value": item[3],
-                Fee: item[4]
-            });
-            i++;
-        });
-        return temp;
-    }
+  const rows = (profile.body || []).map((item, index) => ({
+    key: index + 1,
+    Season: item[0],
+    Date: item[1],
+    From: item[2],
+    To: item[3],
+    "Market Value": item[4],
+    Fee: item[5],
+  }));
 
+  return <Templeate columns={columns} rows={rows} emptyMessage="No transfer history available." />;
+};
 
-    function handleCol() {
-        if (!profile) return []; // Handle case where profile is not yet fetched
-        let temp = [
-            {
-                key: "Date",
-                label: "Date"
-            },
-            {
-                key: "From",
-                label: "From"
-            },
-            {
-                key: "To",
-                label: "To"
-            },
-            {
-                key: "Market Value",
-                label: "Market Value"
-            },
-            {
-                key: "Fee",
-                label: "Fee"
-            }
-        ];
-
-        return temp;
-    }
-
-    return (
-        <div>
-            {
-                profile && <Templeate columns={handleCol()} rows={handleRow()} profile={profile} />
-            }
-
-            {
-                !profile && <Skel />
-            }
-        </div>
-    );
-}
 export default Transfers;

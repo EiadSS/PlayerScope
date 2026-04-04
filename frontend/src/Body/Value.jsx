@@ -1,58 +1,28 @@
-import React from 'react';
-import Templeate from './Templeate';
-import Skel from './Skel';
+import React from "react";
+import Templeate from "./Templeate";
+import Skel from "./Skel";
 
 const Value = ({ profile }) => {
+  if (!profile) {
+    return <Skel />;
+  }
 
-    function handleRow() {
-        let temp = []
-        let i = 1
-        let toLoop = profile.result
-        toLoop.forEach(function (item) {
-            delete item.clubID
-            item["key"] = i
-            temp.push(item);
-            i++;
-        });
-        return temp;
-    }
+  const columns = [
+    { key: "age", label: "Age" },
+    { key: "date", label: "Date" },
+    { key: "clubName", label: "Club" },
+    { key: "value", label: "Value" },
+  ];
 
+  const rows = (profile.result || []).map((item, index) => ({
+    key: index + 1,
+    age: item.age,
+    date: item.date,
+    clubName: item.clubName,
+    value: item.value,
+  }));
 
-    function handleCol() {
-        if (!profile) return []; // Handle case where profile is not yet fetched
-        let temp = [
-            {
-                key: "age",
-                label: "Age"
-            },
-            {
-                key: "date",
-                label: "Date"
-            },
-            {
-                key: "clubName",
-                label: "Club Name"
-            },
-            {
-                key: "value",
-                label: "Value"
-            }
-        ];
+  return <Templeate columns={columns} rows={rows} emptyMessage="No market value history available." />;
+};
 
-        return temp;
-    }
-
-    return (
-        <div>
-            {profile &&
-
-                <Templeate columns={handleCol()} rows={handleRow()} profile={profile} />
-            }
-            {
-                !profile &&
-                <Skel />
-            }
-        </div>
-    );
-}
 export default Value;

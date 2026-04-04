@@ -1,23 +1,28 @@
 import React from "react";
-import { Image } from "@nextui-org/react";
+import { Card, CardBody, Image, Skeleton } from "@nextui-org/react";
 
-export default function PlayerPic({ picture, load }) {
+export default function PlayerPic({ picture, isLoading, playerName }) {
   return (
-
-    <div>
-
-      {load && (<Image
-        alt="NextUI hero Image with delay"
-        className="player-pic"
-        isLoading
-      />)}
-
-      {!load && (<Image
-        alt="NextUI hero Image with delay"
-        src={picture}
-        className="player-pic"
-        isZoomed
-      />)}
-    </div>
+    <Card className="player-card">
+      <CardBody className="player-card-body">
+        {isLoading ? (
+          <Skeleton className="player-pic-skeleton rounded-xl">
+            <div className="player-pic" />
+          </Skeleton>
+        ) : picture ? (
+          <Image
+            alt={playerName ? `${playerName} portrait` : "Player portrait"}
+            src={picture}
+            className="player-pic"
+            radius="lg"
+            isZoomed
+          />
+        ) : (
+          <div className="player-placeholder">
+            {playerName?.slice(0, 2)?.toUpperCase() || "PF"}
+          </div>
+        )}
+      </CardBody>
+    </Card>
   );
 }

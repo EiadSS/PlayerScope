@@ -1,149 +1,196 @@
-import React from "react";
-import { Tabs, Tab, Snippet } from "@nextui-org/react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, CardBody, Skeleton, Snippet, Tab, Tabs } from "@nextui-org/react";
 import Profile from "../Body/Profile";
 import Stats from "../Body/Stats";
 import Transfers from "../Body/Transfers";
 import Injuries from "../Body/Injuries";
 import Value from "../Body/Value";
-import { useState, useEffect } from "react";
+import { fetchJson } from "../lib/api";
 
+const TAB_COMPONENTS = {
+  Profile,
+  Stats,
+  Injuries,
+  Value,
+  Transfers,
+};
 
-export default function Nav({ player, setLoad, setPicture }) {
+const TAB_REQUESTS = {
+  Profile: null,
+  Stats: "stats",
+  Injuries: "injuries",
+  Value: "value",
+  Transfers: "transfers",
+};
 
-  const [profile, setProfile] = useState(null); // Initialize profile state properly
-  const [stats, setStats] = useState(null)
-  const [injuries, setInjuries] = useState(null); // Initialize profile state properly
-  const [value, setValue] = useState(null)
-  const [transfers, setTransfers] = useState(null)
-  const [error, setError] = useState(false)
+const TABS = [
+  { id: "Profile", label: "Profile" },
+  { id: "Stats", label: "Stats" },
+  { id: "Injuries", label: "Injuries" },
+  { id: "Value", label: "Value" },
+  { id: "Transfers", label: "Transfers" },
+];
+
+export default function Nav({ selectedPlayer, setIsSearching, setPicture }) {
+  const [activeTab, setActiveTab] = useState("Profile");
+  const [profile, setProfile] = useState(null);
+  const [dataMap, setDataMap] = useState({});
+  const [loadingMap, setLoadingMap] = useState({ Profile: false });
+  const [tabErrors, setTabErrors] = useState({});
+  const [fatalError, setFatalError] = useState("");
+
+  const playerId = selectedPlayer?.id || profile?.id;
 
   useEffect(() => {
-    fetchData();
-  }, [player]);
+    const controller = new AbortController();
 
-  useEffect(() => {
-    async function fetchAdditionalData() {
-      if (profile) {
-        setPicture(profile.picture);
-        let id = '/' + profile.id;
-        try {
-          await helper('stats', player, id);
-          await helper('injuries', player, id);
-          await helper('value', player, id);
-          await helper('transfers', player, id);
-        } catch (error) {
-          console.error('Error fetching additional data:', error);
+    async function loadProfile() {
+      setActiveTab("Profile");
+      setProfile(null);
+      setDataMap({});
+      setLoadingMap({ Profile: true });
+      setTabErrors({});
+      setFatalError("");
+      setPicture("");
+      setIsSearching(true);
+
+      try {
+        const path = selectedPlayer?.id
+          ? `profile-by-id/${encodeURIComponent(selectedPlayer.id)}`
+          : `profile/${encodeURIComponent(selectedPlayer.query || selectedPlayer.name)}`;
+
+        const payload = await fetchJson(path, {
+          signal: controller.signal,
+        });
+
+        setProfile(payload);
+        setDataMap({ Profile: payload });
+        setPicture(payload.picture || "");
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setFatalError(err.message || "Player not found.");
         }
+      } finally {
+        setLoadingMap({ Profile: false });
+        setIsSearching(false);
       }
     }
 
-    fetchAdditionalData();
-  }, [profile]);
+    if (selectedPlayer) {
+      loadProfile();
+    }
 
+    return () => controller.abort();
+  }, [selectedPlayer, setIsSearching, setPicture]);
 
-  async function helper(request, player, id) {
+  const loadTabData = async (tabId) => {
+    if (!playerId || tabId === "Profile" || dataMap[tabId] || loadingMap[tabId]) {
+      return;
+    }
+
+    const requestName = TAB_REQUESTS[tabId];
+    if (!requestName) {
+      return;
+    }
+
+    setLoadingMap((current) => ({ ...current, [tabId]: true }));
+    setTabErrors((current) => ({ ...current, [tabId]: "" }));
+
     try {
-      const response = await fetch('https://transfermarketscrap.onrender.com/app/' + request + '/' + player + id);
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile data');
-      }
-      const result = await response.json();
-      switch (request) {
-        case "profile":
-          setProfile(result)
-          break;
-        case "stats":
-          setStats(result)
-          break;
-        case "injuries":
-          setInjuries(result)
-          break;
-        case "value":
-          setValue(result)
-          break;
-        case "transfers":
-          setTransfers(result)
-          break;
-      }
-      setLoad(false)
-    } catch (error) {
-      console.error('Error fetching data:', error);
+      const payload = await fetchJson(`${requestName}/${encodeURIComponent(playerId)}`);
+      setDataMap((current) => ({ ...current, [tabId]: payload }));
+    } catch (err) {
+      setTabErrors((current) => ({
+        ...current,
+        [tabId]: err.message || `Could not load ${tabId.toLowerCase()}.`,
+      }));
+    } finally {
+      setLoadingMap((current) => ({ ...current, [tabId]: false }));
     }
+  };
+
+  const handleSelectionChange = (key) => {
+    setActiveTab(key);
+    loadTabData(key);
+  };
+
+  const currentContent = useMemo(() => {
+    const Component = TAB_COMPONENTS[activeTab];
+    if (!Component) {
+      return null;
+    }
+
+    const isLoading = loadingMap[activeTab];
+    const tabData = activeTab === "Profile" ? profile : dataMap[activeTab];
+    const tabError = tabErrors[activeTab];
+
+    if (isLoading) {
+      return (
+        <Card className="tab-loading-card">
+          <CardBody>
+            <Skeleton className="rounded-lg">
+              <div className="h-10 rounded-lg bg-default-300" />
+            </Skeleton>
+            <div className="space-y-3 mt-4">
+              <Skeleton className="w-full rounded-lg">
+                <div className="h-5 w-full rounded-lg bg-default-200" />
+              </Skeleton>
+              <Skeleton className="w-full rounded-lg">
+                <div className="h-5 w-full rounded-lg bg-default-200" />
+              </Skeleton>
+              <Skeleton className="w-full rounded-lg">
+                <div className="h-5 w-full rounded-lg bg-default-200" />
+              </Skeleton>
+            </div>
+          </CardBody>
+        </Card>
+      );
+    }
+
+    if (tabError) {
+      return (
+        <Snippet hideSymbol hideCopyButton variant="flat" color="danger">
+          {tabError}
+        </Snippet>
+      );
+    }
+
+    return <Component profile={tabData} />;
+  }, [activeTab, dataMap, loadingMap, profile, tabErrors]);
+
+  if (fatalError) {
+    return (
+      <div className="info-shell">
+        <Snippet hideSymbol hideCopyButton variant="flat" color="danger">
+          {fatalError}
+        </Snippet>
+      </div>
+    );
   }
 
-  async function fetchData() {
-    setProfile(null)
-    setStats(null)
-    setInjuries(null)
-    setValue(null)
-    setTransfers(null)
-    await helper('profile', player, '')
-    setLoad(false)
+  if (!profile && loadingMap.Profile) {
+    return <div className="info-shell">{currentContent}</div>;
   }
 
-  function handShow(section) {
-    const components = {
-      Profile,
-      Stats,
-      Injuries,
-      Value,
-      Transfers
-    };
-
-    const Component = components[section];
-
-    if (Component) {
-      if (section === "Profile") {
-        return <Component setPicture={setPicture} player={player} setLoad={setLoad} profile={profile} />;
-      } else if (section === "Stats") {
-        return <Component player={player} setLoad={setLoad} profile={stats} />;
-      } else if (section === "Injuries") {
-        return <Component player={player} setLoad={setLoad} profile={injuries} />;
-      } else if (section === "Value") {
-        return <Component player={player} setLoad={setLoad} profile={value} />;
-      } else if (section == 'Transfers') {
-        return <Component player={player} setLoad={setLoad} profile={transfers} />;
-      }
-    }
+  if (!profile) {
     return null;
   }
 
-  let tabs = [
-    {
-      id: "Profile",
-      label: "Profile",
-    },
-    {
-      id: "Stats",
-      label: "Stats",
-    },
-    {
-      id: "Injuries",
-      label: "Injuries",
-    },
-    {
-      id: "Value",
-      label: "Value",
-    },
-    {
-      id: "Transfers",
-      label: "Transfers",
-    },
-
-  ];
-
   return (
-    <div className="info">
-      {!error && <div className="flex w-full flex-col" title="tabs">
-        <Tabs className="tabs" aria-label="Dynamic tabs" items={tabs} size="lg" color="primary">
-          {(item) => (
-            <Tab key={item.id} title={item.label}>
-              {handShow(item.id)}
-            </Tab>
-          )}
-        </Tabs>
-      </div>}
-      {error && <Snippet hideSymbol hideCopyButton variant="solid">Sorry the player was not found :( Make sure to input the players first name then the last, everything has to be spelled corectly</Snippet>}
+    <div className="info-shell">
+      <Tabs
+        aria-label="Player sections"
+        className="tabs"
+        color="primary"
+        selectedKey={activeTab}
+        onSelectionChange={handleSelectionChange}
+      >
+        {TABS.map((item) => (
+          <Tab key={item.id} title={item.label}>
+            {currentContent}
+          </Tab>
+        ))}
+      </Tabs>
     </div>
   );
 }

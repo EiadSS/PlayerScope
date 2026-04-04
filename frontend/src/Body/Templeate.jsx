@@ -1,27 +1,30 @@
-import React from 'react'
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react";
+import React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from "@nextui-org/react";
 
-const Templeate = ({columns, rows, profile}) => {
-    return (
-        <div>
-            {profile && (
-                <Table aria-label="Example table with dynamic content">
-                    <TableHeader columns={columns}>
-                        {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
-                    </TableHeader>
-                    <TableBody items={rows}>
-                        {(item) => (
-                            <TableRow key={item.key}>
-                                {(columnKey) => <TableCell>{item[columnKey]}</TableCell>}
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            )
-            }
+const Templeate = ({ columns, rows, emptyMessage = "No data available." }) => {
+  return (
+    <div className="table-shell">
+      <Table aria-label="Player data table" removeWrapper>
+        <TableHeader columns={columns}>
+          {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
+        </TableHeader>
+        <TableBody items={rows} emptyContent={emptyMessage}>
+          {(item) => (
+            <TableRow key={item.key}>
+              {(columnKey) => <TableCell>{item[columnKey]}</TableCell>}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
 
-        </div>
-    );
-}
-
-export default Templeate
+export default Templeate;
