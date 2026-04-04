@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Chip, Snippet } from "@nextui-org/react";
+import { Chip } from "@nextui-org/react";
 import Bar from "./components/Bar";
 import PlayerPic from "./components/PlayerPic";
 import Nav from "./components/Nav";
@@ -25,15 +25,6 @@ export default function App() {
             Search a player and browse their profile, stats, injuries, market value,
             and transfer history in one place.
           </p>
-
-          <div className="notice-stack">
-            <Snippet hideSymbol hideCopyButton variant="flat" color="primary">
-              Tip: autocomplete is now built in, so you do not need the exact spelling anymore.
-            </Snippet>
-            <Snippet hideSymbol hideCopyButton variant="flat" color="default">
-              Searches are faster now because only the active tab loads, and results are cached on the backend.
-            </Snippet>
-          </div>
 
           <Bar onSearch={setSelectedPlayer} isSearching={isSearching} />
         </div>
