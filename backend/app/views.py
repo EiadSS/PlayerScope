@@ -4,6 +4,7 @@ import os
 import re
 from datetime import datetime
 from io import StringIO
+import logging
 
 import pandas as pd
 import requests
@@ -38,6 +39,8 @@ SESSION.headers.update(
         "Accept-Language": "en-US,en;q=0.9",
     }
 )
+
+logger = logging.getLogger(__name__)
 
 
 class TransfermarktProxyError(Exception):
@@ -198,9 +201,24 @@ def request_html(url: str, params=None) -> str:
 
     try:
         response = SESSION.get(url, params=params, timeout=REQUEST_TIMEOUT)
-        response.raise_for_status()
-    except requests.RequestException as exc:
-        raise TransfermarktProxyError("Could not fetch player data right now.") from exc
+
+        if not response.ok:
+            logger.error(
+                "Transfermarkt HTML request failed | status=%s | url=%s | final_url=%s | body=%s",
+                response.status_code,
+                url,
+                getattr(response, "url", url),
+                response.text[:500],
+            )
+            raise TransfermarktProxyError("Could not fetch player data right now.")
+
+    except requests.RequestException:
+        logger.exception(
+            "Transfermarkt HTML request exception | url=%s | params=%s",
+            url,
+            params,
+        )
+        raise TransfermarktProxyError("Could not fetch player data right now.")
 
     cache.set(cache_key, response.text, CACHE_TTL_SECONDS)
     return response.text
@@ -214,17 +232,34 @@ def request_json(url: str, params=None):
 
     try:
         response = SESSION.get(url, params=params, timeout=REQUEST_TIMEOUT)
-        response.raise_for_status()
-    except requests.RequestException as exc:
-        raise TransfermarktProxyError("Could not fetch player data right now.") from exc
+
+        if not response.ok:
+            logger.error(
+                "Transfermarkt JSON request failed | status=%s | url=%s | final_url=%s | body=%s",
+                response.status_code,
+                url,
+                getattr(response, "url", url),
+                response.text[:500],
+            )
+            raise TransfermarktProxyError("Could not fetch player data right now.")
+
+    except requests.RequestException:
+        logger.exception(
+            "Transfermarkt JSON request exception | url=%s | params=%s",
+            url,
+            params,
+        )
+        raise TransfermarktProxyError("Could not fetch player data right now.")
 
     try:
         payload = response.json()
     except ValueError:
-        try:
-            payload = json.loads(response.text)
-        except Exception as exc:
-            raise TransfermarktProxyError("Could not parse player data right now.") from exc
+        logger.error(
+            "Transfermarkt JSON parse failed | url=%s | body=%s",
+            getattr(response, "url", url),
+            response.text[:500],
+        )
+        raise TransfermarktProxyError("Could not parse player data right now.")
 
     cache.set(cache_key, payload, CACHE_TTL_SECONDS)
     return payload
