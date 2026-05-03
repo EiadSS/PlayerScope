@@ -1,4 +1,4 @@
-# FootyFinder Analytics
+# PlayerScope Analytics
 
 A local football analytics demo that turns Transfermarkt player data into a recruiter-ready dashboard.
 
