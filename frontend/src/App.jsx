@@ -11,26 +11,59 @@ export default function App() {
 
   return (
     <div className="page-shell">
+      <div className="ambient-grid" />
       <div className="ambient-glow ambient-glow-left" />
       <div className="ambient-glow ambient-glow-right" />
+      <div className="ambient-glow ambient-glow-bottom" />
 
       <div className="page">
-        <div className="hero-card">
-          <Chip color="primary" variant="flat" className="hero-chip">
-            Football player search + stats explorer
-          </Chip>
+        <section className="hero-card hero-card-clean">
+          <div className="hero-main hero-main-clean">
+            <Chip color="primary" variant="flat" className="hero-chip">
+              Player intelligence platform
+            </Chip>
 
-          <h1>FootyFinder</h1>
-          <p className="hero-copy">
-            Search a player and browse their profile, stats, injuries, market value,
-            and transfer history in one place.
-          </p>
+            <div className="brand-row" aria-label="PlayerScope brand">
+              <div className="brand-mark">PS</div>
+              <span>PlayerScope</span>
+            </div>
 
-          <Bar onSearch={setSelectedPlayer} isSearching={isSearching} />
-        </div>
+            <h1>Explore football intelligence faster</h1>
+            <p className="hero-copy">
+              Search players, compare profiles, and review scouting, value, transfer, injury,
+              and performance data in one clean dashboard.
+            </p>
+
+            <Bar onSearch={setSelectedPlayer} isSearching={isSearching} />
+
+            <div className="home-actions" aria-label="Main features">
+              <div className="home-action-card">
+                <span>⌕</span>
+                <div>
+                  <strong>Search Player</strong>
+                  <small>Find any player profile</small>
+                </div>
+              </div>
+              <div className="home-action-card">
+                <span>⇄</span>
+                <div>
+                  <strong>Compare Players</strong>
+                  <small>Side-by-side analysis</small>
+                </div>
+              </div>
+              <div className="home-action-card">
+                <span>▣</span>
+                <div>
+                  <strong>Scout Report</strong>
+                  <small>Signal scores and radar view</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {selectedPlayer && (
-          <div className="content-shell">
+          <section className="content-shell">
             <PlayerPic
               picture={playerPicture}
               isLoading={isSearching}
@@ -41,7 +74,7 @@ export default function App() {
               setPicture={setPlayerPicture}
               setIsSearching={setIsSearching}
             />
-          </div>
+          </section>
         )}
       </div>
     </div>

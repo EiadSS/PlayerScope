@@ -1,34 +1,54 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, CardBody, Skeleton, Snippet, Tab, Tabs } from "@nextui-org/react";
+import { Card, CardBody, Skeleton, Snippet } from "@nextui-org/react";
 import Profile from "../Body/Profile";
+import Overview from "../Body/Overview";
 import Stats from "../Body/Stats";
 import Transfers from "../Body/Transfers";
 import Injuries from "../Body/Injuries";
 import Value from "../Body/Value";
+import Compare from "../Body/Compare";
+import ScoutReport from "../Body/ScoutReport";
+import Timeline from "../Body/Timeline";
+import MarketLab from "../Body/MarketLab";
 import { fetchJson } from "../lib/api";
 
 const TAB_COMPONENTS = {
   Profile,
+  Overview,
   Stats,
   Injuries,
   Value,
   Transfers,
+  Compare,
+  ScoutReport,
+  Timeline,
+  MarketLab,
 };
 
 const TAB_REQUESTS = {
   Profile: null,
+  Overview: "analytics",
   Stats: "stats",
   Injuries: "injuries",
   Value: "value",
   Transfers: "transfers",
+  Compare: null,
+  ScoutReport: "analytics",
+  Timeline: "analytics",
+  MarketLab: "analytics",
 };
 
 const TABS = [
-  { id: "Profile", label: "Profile" },
-  { id: "Stats", label: "Stats" },
-  { id: "Injuries", label: "Injuries" },
-  { id: "Value", label: "Value" },
-  { id: "Transfers", label: "Transfers" },
+  { id: "Overview", label: "Overview", icon: "⌂" },
+  { id: "Profile", label: "Profile", icon: "👤" },
+  { id: "Stats", label: "Stats", icon: "▥" },
+  { id: "ScoutReport", label: "Scout Report", icon: "▤" },
+  { id: "Compare", label: "Compare", icon: "⇄" },
+  { id: "Transfers", label: "Transfers", icon: "↔" },
+  { id: "Value", label: "Value", icon: "€" },
+  { id: "Injuries", label: "Injuries", icon: "+" },
+  { id: "Timeline", label: "Timeline", icon: "◷" },
+  { id: "MarketLab", label: "Market Lab", icon: "◇" },
 ];
 
 export default function Nav({ selectedPlayer, setIsSearching, setPicture }) {
@@ -93,12 +113,29 @@ export default function Nav({ selectedPlayer, setIsSearching, setPicture }) {
       return;
     }
 
+    const sharedEntry = Object.entries(TAB_REQUESTS).find(
+      ([key, value]) => value === requestName && dataMap[key]
+    );
+
+    if (sharedEntry) {
+      setDataMap((current) => ({ ...current, [tabId]: dataMap[sharedEntry[0]] }));
+      return;
+    }
+
     setLoadingMap((current) => ({ ...current, [tabId]: true }));
     setTabErrors((current) => ({ ...current, [tabId]: "" }));
 
     try {
       const payload = await fetchJson(`${requestName}/${encodeURIComponent(playerId)}`);
-      setDataMap((current) => ({ ...current, [tabId]: payload }));
+      setDataMap((current) => {
+        const updated = { ...current, [tabId]: payload };
+        Object.entries(TAB_REQUESTS).forEach(([key, value]) => {
+          if (value === requestName) {
+            updated[key] = payload;
+          }
+        });
+        return updated;
+      });
     } catch (err) {
       setTabErrors((current) => ({
         ...current,
@@ -109,9 +146,9 @@ export default function Nav({ selectedPlayer, setIsSearching, setPicture }) {
     }
   };
 
-  const handleSelectionChange = (key) => {
-    setActiveTab(key);
-    loadTabData(key);
+  const handleSelectionChange = (tabId) => {
+    setActiveTab(tabId);
+    loadTabData(tabId);
   };
 
   const currentContent = useMemo(() => {
@@ -155,8 +192,14 @@ export default function Nav({ selectedPlayer, setIsSearching, setPicture }) {
       );
     }
 
-    return <Component profile={tabData} />;
-  }, [activeTab, dataMap, loadingMap, profile, tabErrors]);
+    return (
+      <Component
+        profile={tabData}
+        playerId={playerId}
+        selectedPlayer={selectedPlayer}
+      />
+    );
+  }, [activeTab, dataMap, loadingMap, playerId, profile, selectedPlayer, tabErrors]);
 
   if (fatalError) {
     return (
@@ -178,19 +221,27 @@ export default function Nav({ selectedPlayer, setIsSearching, setPicture }) {
 
   return (
     <div className="info-shell">
-      <Tabs
-        aria-label="Player sections"
-        className="tabs"
-        color="primary"
-        selectedKey={activeTab}
-        onSelectionChange={handleSelectionChange}
-      >
-        {TABS.map((item) => (
-          <Tab key={item.id} title={item.label}>
-            {currentContent}
-          </Tab>
-        ))}
-      </Tabs>
+      <nav className="player-tabs" aria-label="Player sections">
+        {TABS.map((item) => {
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`player-tab ${isActive ? "player-tab-active" : ""}`}
+              onClick={() => handleSelectionChange(item.id)}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <span className="player-tab-icon" aria-hidden="true">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="player-tab-panel">
+        {currentContent}
+      </div>
     </div>
   );
 }

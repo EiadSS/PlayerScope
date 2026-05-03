@@ -3,3 +3,15 @@ backend/.venv/
 *.pyc
 backend/.idea/
 footyfinder-fixes.patch
+# Python
+__pycache__/
+*.pyc
+venv/
+backend/venv/
+
+# IDE
+.idea/
+
+# Node
+node_modules/
+dist/

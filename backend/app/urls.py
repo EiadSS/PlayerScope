@@ -11,4 +11,6 @@ urlpatterns = [
     path("injuries/<str:player_id>", views.injuries, name="injuries"),
     path("value/<str:player_id>", views.value, name="value"),
     path("transfers/<str:player_id>", views.transfers, name="transfers"),
+    path("analytics/<str:player_id>", views.analytics, name="analytics"),
+    path("compare/<str:left_player_id>/<str:right_player_id>", views.compare, name="compare"),
 ]

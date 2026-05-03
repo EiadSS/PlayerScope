@@ -1,6 +1,7 @@
 import React from "react";
 import Templeate from "./Templeate";
 import Skel from "./Skel";
+import MetricCard from "../components/MetricCard";
 
 const Injuries = ({ profile }) => {
   if (!profile) {
@@ -26,7 +27,28 @@ const Injuries = ({ profile }) => {
     "Games missed": item[5],
   }));
 
-  return <Templeate columns={columns} rows={rows} emptyMessage="No injury history available." />;
+  const summary = profile.summary || {};
+
+  return (
+    <div className="analytics-stack">
+      <div className="metric-grid metric-grid-four">
+        <MetricCard label="Listed injuries" value={summary.totalInjuries ?? 0} />
+        <MetricCard label="Days out" value={summary.totalDaysOut ?? 0} />
+        <MetricCard label="Games missed" value={summary.totalGamesMissed ?? 0} />
+        <MetricCard label="Avg. days out" value={summary.averageDaysOut ?? 0} />
+      </div>
+
+      {summary.longestInjury && (
+        <div className="insight-row">
+          <span>Longest absence: <strong>{summary.longestInjury.injury}</strong></span>
+          <span>{summary.longestInjury.days} days</span>
+          <span>{summary.longestInjury.season}</span>
+        </div>
+      )}
+
+      <Templeate columns={columns} rows={rows} emptyMessage="No injury history available." />
+    </div>
+  );
 };
 
 export default Injuries;

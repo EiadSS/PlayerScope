@@ -5,8 +5,9 @@ export default function PlayerPic({ picture, isLoading, playerName }) {
   return (
     <Card className="player-card">
       <CardBody className="player-card-body">
+        <div className="player-card-label">Selected player</div>
         {isLoading ? (
-          <Skeleton className="player-pic-skeleton rounded-xl">
+          <Skeleton className="player-pic-skeleton rounded-3xl">
             <div className="player-pic" />
           </Skeleton>
         ) : picture ? (
@@ -22,6 +23,10 @@ export default function PlayerPic({ picture, isLoading, playerName }) {
             {playerName?.slice(0, 2)?.toUpperCase() || "PF"}
           </div>
         )}
+        <div className="player-nameplate">
+          <span>{playerName || "Player"}</span>
+          <small>Profile image</small>
+        </div>
       </CardBody>
     </Card>
   );
